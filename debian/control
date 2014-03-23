@@ -1,0 +1,17 @@
+Source: hello-debian
+Section: utils
+Priority: extra
+Maintainer: Full Name <yourname@example.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Vcs-Git: git@github.com:streadway/hello-debian.git
+Vcs-Browser: http://github.com/streadway/hello-debian
+
+Package: hello-debian
+Section: utils
+Priority: extra
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Example package maintenance (under 60 chars)
+ The build output from a repository listing the steps to setup a debian
+ package in a long-format under 80 characters per line.
