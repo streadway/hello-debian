@@ -192,3 +192,14 @@ At this point, it's possible to build `hello-debian` using `dpkg-buildpackage -u
 Push your original changes in the master branch.
 
 Confirm Jenkins can build the project with *Build Now*.
+
+# Tagging builds
+
+The `git-buildpackage` tool works similar to `dpkg-buildpackage` but uses
+branches and tags to manage the debian control files compared to the upstream
+sources.
+
+This example only uses the original sources, so we can develop and deploy from
+the `master` branch
+
+
