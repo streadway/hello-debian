@@ -192,3 +192,35 @@ At this point, it's possible to build `hello-debian` using `dpkg-buildpackage -u
 Push your original changes in the master branch.
 
 Confirm Jenkins can build the project with *Build Now*.
+
+# Tagging builds
+
+The `git-buildpackage` tool works similar to `dpkg-buildpackage` but uses
+branches and tags to manage the debian control files compared to the upstream
+sources.
+
+This example only uses the original sources, so we can develop and deploy from
+the `master` branch
+
+Use the changelog to find the debian version to build and tag the debian and upstream branches with that version.
+
+```
+git tag -a "debian/0.0.1" -m "Debian 0.0.1"
+git tag -a "upstream/0.0.1" -m "Upstream 0.0.1"
+```
+
+## Update Jenkins to build tags
+
+In the advanced section of Source Code Management update:
+
+  * Refspec: `+refs/tags/debian/*:refs/remotes/origin/tags/debian/*`
+  * Branches to build: `*/tags/debian/*`
+  * Execute shell: `git-buildpackage -uc -us --git-ignore-new --git-ignore-branch`
+
+`-uc -us` disables signing.
+
+`--git-ignore-new` allows artifacts to remain in the build workspace.
+
+`--git-ignore-branch` allows building from a detatched HEAD from when building a specific tag.
+
+

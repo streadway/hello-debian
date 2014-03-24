@@ -1,5 +1,11 @@
-hello-debian (0.0.1-1) UNRELEASED; urgency=low
+hello-debian (0.0.2-1) UNRELEASED; urgency=low
+
+  * Next build
+
+ -- builder <builder@wheezy-builder>  Mon, 24 Mar 2014 16:05:35 +0100
+
+hello-debian (0.0.1-1) unstable; urgency=low
 
   * Initial build
 
- -- builder <builder@wheezy-builder>  Sun, 23 Mar 2014 12:37:24 +0100
+ -- builder <builder@wheezy-builder>  Mon, 24 Mar 2014 16:05:28 +0100
