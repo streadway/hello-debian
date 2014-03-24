@@ -202,12 +202,17 @@ sources.
 This example only uses the original sources, so we can develop and deploy from
 the `master` branch
 
-Use the changelog to find the debian version to build and tag the debian and upstream branches with that version.
+Use the changelog to find the debian version to build and tag the debian and
+upstream branches with that version.
 
 ```
 git tag -a "debian/0.0.1" -m "Debian 0.0.1"
 git tag -a "upstream/0.0.1" -m "Upstream 0.0.1"
 ```
+
+Alternatively, when you have a tested and installed build, use `dch` to label
+the changes and use `git-buildpackage --git-tag` to tag the repository from
+`debian/changelog`.
 
 ## Update Jenkins to build tags
 
@@ -215,12 +220,84 @@ In the advanced section of Source Code Management update:
 
   * Refspec: `+refs/tags/debian/*:refs/remotes/origin/tags/debian/*`
   * Branches to build: `*/tags/debian/*`
-  * Execute shell: `git-buildpackage -uc -us --git-ignore-new --git-ignore-branch`
+  * Execute shell: `git-buildpackage -uc -us --git-ignore-new --git-ignore-branch --git-cleaner='git clean -dfx'`
 
-`-uc -us` disables signing.
+`+refs/tags/debian/*:refs/remotes/origin/tags/debian/*` forces the synchronization of local tags to remote tags.
+
+`*/tags/debian/*` builds all tags as they appear.
+
+`-uc -us` disables signing of packages.
 
 `--git-ignore-new` allows artifacts to remain in the build workspace.
 
 `--git-ignore-branch` allows building from a detatched HEAD from when building a specific tag.
+
+`--git-cleaner='git clean -dfx'` removes everything from the working directory after the debian helper scripts have started.
+
+## Update Jenkins to build with `sbuild`
+
+The previous techniques used the build dependencies installed on Jenkins.  The
+build will not fail if a build dependency is installed but not declared in
+`debian/control`.
+
+Building from a minimal base system in a secure changeroot acheives repeatable
+builds.
+
+### One time `schroot` setup
+
+`sbuild` uses `schroot` created images with a base system installed from
+`debootstrap`.
+
+Once, on the Jenkins host, create a `wheezy` distribution to use as that base image customized to the internal apt repository mirror.
+
+```
+sbuild-createchroot \
+  --arch=amd64 \
+  --components=main,contrib,non-free \
+  --make-sbuild-tarball=/var/lib/sbuild/wheezy-amd64.tar.gz \
+  wheezy `mktemp -d` http://ftp.de.debian.org/debian
+```
+
+Add the Jenkins user to the sbuild group:
+
+```
+sbuild-adduser jenkins
+
+sevice jenkins restart
+```
+
+## Update Jenkins to use `sbuild` from `git-buildpackage`
+
+  * Execute shell: `git-buildpackage -uc -us --git-ignore-new --git-ignore-branch --git-cleaner='git clean -dfx'`
+
+```
+sources=$(mktemp -d)
+trap 'rm -rf $sources' EXIT
+git-buildpackage -uc -us \
+  --git-ignore-new \
+  --git-ignore-branch \
+  --git-export-dir=${sources} \
+  --git-export=${GIT_BRANCH} \
+  --git-force-create \
+  --git-cleaner='git clean -dfx' \
+  --git-builder='sbuild -v --dist=wheezy'
+```
+
+This builds into a temp directory and removes it after the build.  In order to
+upload the results, use `dput` in the post build step assuming jenkins has a
+`dput` configuration for `local` created.
+
+```
+sources=$(mktemp -d)
+trap 'rm -rf $sources' EXIT
+git-buildpackage -uc -us \
+  --git-ignore-new \
+  --git-ignore-branch \
+  --git-export-dir=${sources} \
+  --git-export=${GIT_BRANCH} \
+  --git-force-create \
+  --git-cleaner='git clean -dfx' \
+  --git-builder='sbuild -v --dist=wheezy --post-build-commands "dput -p local %SBUILD_CHANGES"'
+```
 
 
